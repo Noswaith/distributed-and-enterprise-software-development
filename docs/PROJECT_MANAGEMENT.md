@@ -9,7 +9,8 @@
 |              To Do             |                   In Progress                  | In Review / Testing |                      Done                      |
 |:------------------------------:|:----------------------------------------------:|:-------------------:|:----------------------------------------------:|
 | Create supporting presentation | Expand on processes within the initial diagram |          —          | Create the 1st Use Case Diagram via Camunda.io |
-| — | — |          Set up CircleCI          | Set up file structure |
+|                —               |                        —                       |                     |              Set up file structure             |
+|                                |                                                |                     |                 Set up CircleCI                |
 
 
 **Workflow:** To Do → In Progress → In Review / Testing → Done.
@@ -26,7 +27,7 @@
 | Complete diagram expansion | [Ori](https://github.com/Orion-Machin), [Clara](https://github.com/SifKitt) | High | In Progress | [Camunda BPMN Diagrams](../diagrams/) |
 | Create supporting presentation | [Thomas](https://github.com/Werticus), [Obi](https://github.com/Obinnaya-Og) | Medium | To Do | Presentation file (pending) |
 | Maintain GitHub repository and documentation | [Aron](https://github.com/Noswaith) | Medium | Ongoing | Repository commits and documentation updates |
-| Create File Structure + Wire in CircleCI | [Aron](https://github.com/Noswaith) | High | Ongoing | [Application Folder](../application/)
+| Create File Structure + Wire in CircleCI | [Aron](https://github.com/Noswaith) | High | Done | [Application Folder](../application/)
 
 
 ## Sprint Listings
