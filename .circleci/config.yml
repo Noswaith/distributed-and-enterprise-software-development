@@ -1,0 +1,20 @@
+version: 2.1
+
+jobs:
+  verify-structure:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Verify project structure
+          command: |
+            test -d application/frontend
+            test -d application/backend
+            test -d application/database
+            echo "Project structure verified!"
+
+workflows:
+  project-checks:
+    jobs:
+      - verify-structure
