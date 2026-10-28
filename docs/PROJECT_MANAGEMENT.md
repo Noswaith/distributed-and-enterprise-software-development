@@ -19,11 +19,13 @@
 
 ## Task Allocation
 
-| Task                                | Assigned member | Priority | Status      | Notes / Evidence                   |
-|-------------------------------------|-----------------|----------|-------------|------------------------------------|
-| Finish the diagram expansion        | [Member]        | High     | In Progress | [Camunda BPMN Diagrams](../diagrams/) |
-| Presentation                        | [Member]        | Medium   | In Progress | ////                  |
-| Maintain the GitHub & Documentation | [Member]        | Low      | Ongoing     | This entire site.                  |
+| Task | Assigned Member | Priority | Status | Notes / Evidence |
+|---|---|---|---|---|
+| Complete diagram expansion | [Ori](https://github.com/Orion-Machin), [Clara](https://github.com/SifKitt) | High | In Progress | [Camunda BPMN Diagrams](../diagrams/) |
+| Create supporting presentation | [Thomas](https://github.com/Werticus), [Obi](https://github.com/Obinnaya-Og) | Medium | To Do | Presentation file (pending) |
+| Maintain GitHub repository and documentation | [Aron](https://github.com/Noswaith) | Medium | Ongoing | Repository commits and documentation updates |
+| Create File Structure + Wire in CircleCI | [Aron](https://github.com/Noswaith) | High | Ongoing | [Application Folder](../application/)
+
 
 ## Sprint Listings
 ### Sprint 1:
