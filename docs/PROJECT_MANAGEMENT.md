@@ -21,7 +21,7 @@
 
 | Task                                | Assigned member | Priority | Status      | Notes / Evidence                   |
 |-------------------------------------|-----------------|----------|-------------|------------------------------------|
-| Finish the diagram expansion        | [Member]        | High     | In Progress | [Camunda BPMN Diagrams](diagrams/) |
+| Finish the diagram expansion        | [Member]        | High     | In Progress | [Camunda BPMN Diagrams](.../diagrams/) |
 | Presentation                        | [Member]        | Medium   | In Progress | ////                  |
 | Maintain the GitHub & Documentation | [Member]        | Low      | Ongoing     | This entire site.                  |
 
