@@ -6,10 +6,9 @@
 
 ## Kanban Board
 
-| To Do | In Progress | In Review / Testing | Done |
-|:---|:---|:---|:---|
-| [Task / Issue #] | [Task / Issue #] | [Task / Issue #] | [Task / Issue #] |
-| [Task / Issue #] | — | — | — |
+|              To Do             |                   In Progress                  | In Review / Testing |                      Done                      |
+|:------------------------------:|:----------------------------------------------:|:-------------------:|:----------------------------------------------:|
+| Create supporting presentation | Expand on processes within the initial diagram |          —          | Create the 1st Use Case Diagram via Camunda.io |
 
 **Workflow:** To Do → In Progress → In Review / Testing → Done.
 
@@ -20,10 +19,17 @@
 
 ## Task Allocation
 
-| Task / GitHub Issue | Assigned member | Priority | Status | Notes / Evidence |
-|:---|:---|:---|:---|:---|
-| [Task 1 / #1] | [Member] | High | To Do | [Issue / PR link] |
-| [Task 2 / #2] | [Member] | Medium | In Progress | [Issue / PR link] |
-| [Task 3 / #3] | [Member] | Low | Done | [Issue / PR link] |
+| Task                                | Assigned member | Priority | Status      | Notes / Evidence                   |
+|-------------------------------------|-----------------|----------|-------------|------------------------------------|
+| Finish the diagram expansion        | [Member]        | High     | In Progress | [Camunda BPMN Diagrams](diagrams/) |
+| Presentation                        | [Member]        | Medium   | In Progress | ////                  |
+| Maintain the GitHub & Documentation | [Member]        | Low      | Ongoing     | This entire site.                  |
+
+## Sprint Listings
+### Sprint 1:
+
+From: 2026-10-22 to 2026-10-29.
+
+For this sprint, we focused on sharpening up the pre-existing use case from the previous weeks by expanding on it via creating diagrams for each of the functions. 
 
 **Update convention:** When a task changes status, move it on the Kanban board and update its row in the allocation table. Use GitHub Issue or pull request links where possible.
