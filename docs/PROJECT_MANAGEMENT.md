@@ -26,7 +26,7 @@
 | Task | Assigned Member | Priority | Status | Notes / Evidence |
 |---|---|---|---|---|
 | Complete diagram expansion | [Ori](https://github.com/Orion-Machin), [Clara](https://github.com/SifKitt) | High | In Progress | [Camunda BPMN Diagrams](../diagrams/) |
-| Create supporting presentation | [Thomas](https://github.com/Werticus), [Obi](https://github.com/Obinnaya-Og) | Medium | To Do | Presentation file (pending) |
+| Create supporting presentation | [Thomas](https://github.com/Werticus), [Obi](https://github.com/Obinnaya-Og) | Medium | Done | Presentation file (pending) |
 | Maintain GitHub repository and documentation | [Aron](https://github.com/Noswaith) | Medium | Ongoing | Repository commits and documentation updates |
 | Create File Structure + Wire in CircleCI | [Aron](https://github.com/Noswaith) | High | Done | [Application Folder](../application/)
 
