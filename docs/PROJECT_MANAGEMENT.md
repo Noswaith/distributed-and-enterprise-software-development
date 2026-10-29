@@ -8,9 +8,10 @@
 
 |              To Do             |                   In Progress                  | In Review / Testing |                      Done                      |
 |:------------------------------:|:----------------------------------------------:|:-------------------:|:----------------------------------------------:|
-| Create supporting presentation | Expand on processes within the initial diagram |                     | Create the 1st Use Case Diagram via Camunda.io |
+|                                | Expand on processes within the initial diagram |                     | Create the 1st Use Case Diagram via Camunda.io |
 |                                |                                                |                     |              Set up file structure             |
 |                                |                                                |                     |                 Set up CircleCI                |
+|                                |                                                |                     |         Create supporting presentation         |
 
 
 **Workflow:** To Do → In Progress → In Review / Testing → Done.
