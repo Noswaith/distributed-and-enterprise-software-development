@@ -2,16 +2,17 @@
 
 **Project:** [Distributed & Enterprise Software Development]  
 **Group:** [43]  
-**Last updated:** [2026-10-28]
+**Last updated:** [2026-11-12]
 
 ## Kanban Board
 
 |              To Do             |                   In Progress                  | In Review / Testing |                      Done                      |
 |:------------------------------:|:----------------------------------------------:|:-------------------:|:----------------------------------------------:|
-|                                | Expand on processes within the initial diagram |                     | Create the 1st Use Case Diagram via Camunda.io |
+|                                |               i* Diagrams                      |                     | Create the 1st Use Case Diagram via Camunda.io |
 |                                |                                                |                     |              Set up file structure             |
 |                                |                                                |                     |                 Set up CircleCI                |
 |                                |                                                |                     |         Create supporting presentation         |
+|                                |                                                |                     | Expand on processes within the initial diagram |
 
 
 **Workflow:** To Do → In Progress → In Review / Testing → Done.
@@ -25,10 +26,11 @@
 
 | Task | Assigned Member | Priority | Status | Notes / Evidence |
 |---|---|---|---|---|
-| Complete diagram expansion | [Ori](https://github.com/Orion-Machin), [Clara](https://github.com/SifKitt) | High | In Progress | [Camunda BPMN Diagrams](../diagrams/) |
+| Complete diagram expansion | [Ori](https://github.com/Orion-Machin), [Clara](https://github.com/SifKitt) and [Aron]((https://github.com/Noswaith)) | High | Done | [Camunda BPMN Diagrams](../diagrams/) |
 | Create supporting presentation | [Thomas](https://github.com/Werticus), [Obi](https://github.com/Obinnaya-Og) | Medium | Done | Presentation file (pending) |
 | Maintain GitHub repository and documentation | [Aron](https://github.com/Noswaith) | Medium | Ongoing | Repository commits and documentation updates |
 | Create File Structure + Wire in CircleCI | [Aron](https://github.com/Noswaith) | High | Done | [Application Folder](../application/)
+| Create i* diagrams | [Ori](https://github.com/Orion-Machin), [Aron]((https://github.com/Noswaith)) | High | Ongoing | |
 
 
 ## Sprint Listings
