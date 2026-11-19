@@ -8,11 +8,13 @@
 
 |              To Do             |                   In Progress                  | In Review / Testing |                      Done                      |
 |:------------------------------:|:----------------------------------------------:|:-------------------:|:----------------------------------------------:|
-|                                |               i* Diagrams                      |                     | Create the 1st Use Case Diagram via Camunda.io |
+|                                |               Python automation                |                     | Create the 1st Use Case Diagram via Camunda.io |
 |                                |                                                |                     |              Set up file structure             |
 |                                |                                                |                     |                 Set up CircleCI                |
 |                                |                                                |                     |         Create supporting presentation         |
 |                                |                                                |                     | Expand on processes within the initial diagram |
+|                                |                                                |                     |                 i* Diagrams                    |
+|                                |                                                |                     |                Mild Automation                 |
 
 
 **Workflow:** To Do → In Progress → In Review / Testing → Done.
