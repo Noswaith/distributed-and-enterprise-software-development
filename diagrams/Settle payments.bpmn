@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_SettlePayments" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="19abde7" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
+  <collaboration id="Collaboration_Settlement">
+    <participant id="Participant_Marketplace" name="Regional Food Network Marketplace" processRef="Process_Settlement" />
+    <participant id="Participant_Payment" name="Payment Provider" processRef="Process_PaymentProvider" />
+    <participant id="Participant_Producer" name="Producer" />
+    <messageFlow id="Message_PayoutInstructions" sourceRef="Task_Payout" targetRef="Start_Provider" />
+    <messageFlow id="Message_PayoutResult" sourceRef="Task_ProviderReply" targetRef="Task_ReceiveResult" />
+    <messageFlow id="Message_PaidStatement" sourceRef="Task_Confirmation" targetRef="Participant_Producer" />
+    <messageFlow id="Message_PayoutIssue" sourceRef="Task_NotifyIssue" targetRef="Participant_Producer" />
+  </collaboration>
+  <message id="Message_PayoutResult_Definition" name="payout-result">
+    <extensionElements>
+      <zeebe:subscription correlationKey="= settlementId" />
+    </extensionElements>
+  </message>
+  <message id="Message_PayoutInstructions_Definition" name="payout-instructions" />
+  <process id="Process_Settlement" name="Settle Payments - Weekly Producer Settlement" isExecutable="true">
+    <documentation>Models one producer settlement per weekly cycle. Assumptions: 5% marketplace commission applied to eligible sales; refunds/adjustments are reconciled before payout; failed payouts are referred for investigation rather than retried automatically.</documentation>
+    <startEvent id="Start_Weekly" name="Weekly settlement due">
+      <outgoing>Flow_01</outgoing>
+      <timerEventDefinition id="Timer_Weekly">
+        <timeCycle>R/P7D</timeCycle>
+      </timerEventDefinition>
+    </startEvent>
+    <serviceTask id="Task_Collect" name="Gather completed orders&#10;for one producer">
+      <extensionElements>
+        <zeebe:taskDefinition type="collect-producer-orders" retries="3" />
+      </extensionElements>
+      <incoming>Flow_01</incoming>
+      <outgoing>Flow_02</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_Reconcile" name="Reconcile refunds,&#10;fees and adjustments">
+      <extensionElements>
+        <zeebe:taskDefinition type="reconcile-settlement" retries="3" />
+      </extensionElements>
+      <incoming>Flow_02</incoming>
+      <outgoing>Flow_03</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_Commission" name="Calculate 5%&#10;marketplace commission">
+      <extensionElements>
+        <zeebe:taskDefinition type="calculate-commission" retries="3" />
+      </extensionElements>
+      <incoming>Flow_03</incoming>
+      <outgoing>Flow_04</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_Statement" name="Prepare producer&#10;settlement statement">
+      <extensionElements>
+        <zeebe:taskDefinition type="prepare-settlement-statement" retries="3" />
+      </extensionElements>
+      <incoming>Flow_04</incoming>
+      <outgoing>Flow_05</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="Gateway_Payable" name="Payout due?" default="Flow_Zero">
+      <incoming>Flow_05</incoming>
+      <outgoing>Flow_Yes</outgoing>
+      <outgoing>Flow_Zero</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="Task_Payout" name="Submit payout&#10;instructions">
+      <extensionElements>
+        <zeebe:taskDefinition type="submit-producer-payout" retries="3" />
+      </extensionElements>
+      <incoming>Flow_Yes</incoming>
+      <outgoing>Flow_06</outgoing>
+    </serviceTask>
+    <receiveTask id="Task_ReceiveResult" name="Receive provider&#10;payout result" messageRef="Message_PayoutResult_Definition">
+      <incoming>Flow_06</incoming>
+      <outgoing>Flow_07</outgoing>
+    </receiveTask>
+    <exclusiveGateway id="Gateway_Success" name="Payout successful?" default="Flow_Fail">
+      <incoming>Flow_07</incoming>
+      <outgoing>Flow_Paid</outgoing>
+      <outgoing>Flow_Fail</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="Task_RecordPaid" name="Record payout and&#10;update audit ledger">
+      <extensionElements>
+        <zeebe:taskDefinition type="record-settlement-paid" retries="3" />
+      </extensionElements>
+      <incoming>Flow_Paid</incoming>
+      <outgoing>Flow_08</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_Confirmation" name="Send producer&#10;settlement notice">
+      <extensionElements>
+        <zeebe:taskDefinition type="send-settlement-notice" retries="3" />
+      </extensionElements>
+      <incoming>Flow_08</incoming>
+      <outgoing>Flow_09</outgoing>
+    </serviceTask>
+    <endEvent id="End_Paid" name="Settlement complete">
+      <incoming>Flow_09</incoming>
+    </endEvent>
+    <serviceTask id="Task_Failed" name="Record failure and&#10;flag for investigation">
+      <extensionElements>
+        <zeebe:taskDefinition type="record-settlement-failure" retries="3" />
+      </extensionElements>
+      <incoming>Flow_Fail</incoming>
+      <outgoing>Flow_FailNotice</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_NotifyIssue" name="Notify producer of&#10;payout issue">
+      <extensionElements>
+        <zeebe:taskDefinition type="notify-settlement-issue" retries="3" />
+      </extensionElements>
+      <incoming>Flow_FailNotice</incoming>
+      <outgoing>Flow_FailEnd</outgoing>
+    </serviceTask>
+    <endEvent id="End_Failed" name="Settlement needs review">
+      <incoming>Flow_FailEnd</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_01" sourceRef="Start_Weekly" targetRef="Task_Collect" />
+    <sequenceFlow id="Flow_02" sourceRef="Task_Collect" targetRef="Task_Reconcile" />
+    <sequenceFlow id="Flow_03" sourceRef="Task_Reconcile" targetRef="Task_Commission" />
+    <sequenceFlow id="Flow_04" sourceRef="Task_Commission" targetRef="Task_Statement" />
+    <sequenceFlow id="Flow_05" sourceRef="Task_Statement" targetRef="Gateway_Payable" />
+    <sequenceFlow id="Flow_Yes" name="Yes" sourceRef="Gateway_Payable" targetRef="Task_Payout">
+      <conditionExpression xsi:type="tFormalExpression">= payableAmount &gt; 0</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="Flow_06" sourceRef="Task_Payout" targetRef="Task_ReceiveResult" />
+    <sequenceFlow id="Flow_07" sourceRef="Task_ReceiveResult" targetRef="Gateway_Success" />
+    <sequenceFlow id="Flow_Paid" name="Yes" sourceRef="Gateway_Success" targetRef="Task_RecordPaid">
+      <conditionExpression xsi:type="tFormalExpression">= payoutSuccessful = true</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="Flow_08" sourceRef="Task_RecordPaid" targetRef="Task_Confirmation" />
+    <sequenceFlow id="Flow_09" sourceRef="Task_Confirmation" targetRef="End_Paid" />
+    <sequenceFlow id="Flow_Zero" name="No" sourceRef="Gateway_Payable" targetRef="Task_Zero" />
+    <sequenceFlow id="Flow_ZeroEnd" sourceRef="Task_Zero" targetRef="End_Zero" />
+    <sequenceFlow id="Flow_Fail" name="No" sourceRef="Gateway_Success" targetRef="Task_Failed" />
+    <sequenceFlow id="Flow_FailNotice" sourceRef="Task_Failed" targetRef="Task_NotifyIssue" />
+    <sequenceFlow id="Flow_FailEnd" sourceRef="Task_NotifyIssue" targetRef="End_Failed" />
+    <serviceTask id="Task_Zero" name="Record no payable balance&#10;and retain statement">
+      <extensionElements>
+        <zeebe:taskDefinition type="record-zero-settlement" retries="3" />
+      </extensionElements>
+      <incoming>Flow_Zero</incoming>
+      <outgoing>Flow_ZeroEnd</outgoing>
+    </serviceTask>
+    <endEvent id="End_Zero" name="No payout due">
+      <incoming>Flow_ZeroEnd</incoming>
+    </endEvent>
+  </process>
+  <process id="Process_PaymentProvider" name="Payment provider payout processing" isExecutable="false">
+    <startEvent id="Start_Provider" name="Payout instructions received">
+      <outgoing>Flow_P1</outgoing>
+      <messageEventDefinition id="MessageStart_Payout" messageRef="Message_PayoutInstructions_Definition" />
+    </startEvent>
+    <task id="Task_ProviderProcess" name="Validate and execute&#10;producer payout">
+      <incoming>Flow_P1</incoming>
+      <outgoing>Flow_P2</outgoing>
+    </task>
+    <task id="Task_ProviderReply" name="Return payout result&#10;(success or failure)">
+      <incoming>Flow_P2</incoming>
+      <outgoing>Flow_P3</outgoing>
+    </task>
+    <endEvent id="End_Provider" name="Result delivered">
+      <incoming>Flow_P3</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_P1" sourceRef="Start_Provider" targetRef="Task_ProviderProcess" />
+    <sequenceFlow id="Flow_P2" sourceRef="Task_ProviderProcess" targetRef="Task_ProviderReply" />
+    <sequenceFlow id="Flow_P3" sourceRef="Task_ProviderReply" targetRef="End_Provider" />
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_SettlePayments">
+    <bpmndi:BPMNPlane id="BPMNPlane_SettlePayments" bpmnElement="Collaboration_Settlement">
+      <bpmndi:BPMNShape id="Participant_Marketplace_di" bpmnElement="Participant_Marketplace" isHorizontal="true">
+        <dc:Bounds x="30" y="65" width="2260" height="440" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Weekly_di" bpmnElement="Start_Weekly">
+        <dc:Bounds x="85" y="170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Collect_di" bpmnElement="Task_Collect">
+        <dc:Bounds x="175" y="145" width="175" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reconcile_di" bpmnElement="Task_Reconcile">
+        <dc:Bounds x="400" y="145" width="175" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Commission_di" bpmnElement="Task_Commission">
+        <dc:Bounds x="625" y="145" width="175" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Statement_di" bpmnElement="Task_Statement">
+        <dc:Bounds x="850" y="145" width="175" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Payable_di" bpmnElement="Gateway_Payable" isMarkerVisible="true">
+        <dc:Bounds x="1075" y="163" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1069" y="139" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Payout_di" bpmnElement="Task_Payout">
+        <dc:Bounds x="1180" y="145" width="160" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceiveResult_di" bpmnElement="Task_ReceiveResult">
+        <dc:Bounds x="1395" y="145" width="160" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Success_di" bpmnElement="Gateway_Success" isMarkerVisible="true">
+        <dc:Bounds x="1610" y="163" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RecordPaid_di" bpmnElement="Task_RecordPaid">
+        <dc:Bounds x="1715" y="145" width="170" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Confirmation_di" bpmnElement="Task_Confirmation">
+        <dc:Bounds x="1945" y="145" width="175" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Paid_di" bpmnElement="End_Paid">
+        <dc:Bounds x="2170" y="170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Failed_di" bpmnElement="Task_Failed">
+        <dc:Bounds x="1730" y="320" width="190" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyIssue_di" bpmnElement="Task_NotifyIssue">
+        <dc:Bounds x="1975" y="320" width="175" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Failed_di" bpmnElement="End_Failed">
+        <dc:Bounds x="2195" y="345" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Zero_di" bpmnElement="Task_Zero">
+        <dc:Bounds x="1000" y="327" width="200" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Zero_di" bpmnElement="End_Zero">
+        <dc:Bounds x="812" y="352" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="795" y="388" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_01_di" bpmnElement="Flow_01">
+        <di:waypoint x="121" y="188" />
+        <di:waypoint x="175" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02_di" bpmnElement="Flow_02">
+        <di:waypoint x="350" y="188" />
+        <di:waypoint x="400" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03_di" bpmnElement="Flow_03">
+        <di:waypoint x="575" y="188" />
+        <di:waypoint x="625" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04_di" bpmnElement="Flow_04">
+        <di:waypoint x="800" y="188" />
+        <di:waypoint x="850" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05_di" bpmnElement="Flow_05">
+        <di:waypoint x="1025" y="188" />
+        <di:waypoint x="1075" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Yes_di" bpmnElement="Flow_Yes">
+        <di:waypoint x="1125" y="188" />
+        <di:waypoint x="1180" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06_di" bpmnElement="Flow_06">
+        <di:waypoint x="1340" y="188" />
+        <di:waypoint x="1395" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07_di" bpmnElement="Flow_07">
+        <di:waypoint x="1555" y="188" />
+        <di:waypoint x="1610" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Paid_di" bpmnElement="Flow_Paid">
+        <di:waypoint x="1660" y="188" />
+        <di:waypoint x="1715" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08_di" bpmnElement="Flow_08">
+        <di:waypoint x="1885" y="188" />
+        <di:waypoint x="1945" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09_di" bpmnElement="Flow_09">
+        <di:waypoint x="2120" y="188" />
+        <di:waypoint x="2170" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Zero_di" bpmnElement="Flow_Zero">
+        <di:waypoint x="1100" y="213" />
+        <di:waypoint x="1100" y="327" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1108" y="261" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ZeroEnd_di" bpmnElement="Flow_ZeroEnd">
+        <di:waypoint x="1000" y="370" />
+        <di:waypoint x="848" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fail_di" bpmnElement="Flow_Fail">
+        <di:waypoint x="1635" y="213" />
+        <di:waypoint x="1635" y="213" />
+        <di:waypoint x="1635" y="363" />
+        <di:waypoint x="1730" y="363" />
+        <di:waypoint x="1730" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FailNotice_di" bpmnElement="Flow_FailNotice">
+        <di:waypoint x="1920" y="363" />
+        <di:waypoint x="1975" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FailEnd_di" bpmnElement="Flow_FailEnd">
+        <di:waypoint x="2150" y="363" />
+        <di:waypoint x="2195" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Payment_di" bpmnElement="Participant_Payment" isHorizontal="true">
+        <dc:Bounds x="30" y="530" width="2260" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Provider_di" bpmnElement="Start_Provider">
+        <dc:Bounds x="1190" y="595" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProviderProcess_di" bpmnElement="Task_ProviderProcess">
+        <dc:Bounds x="1300" y="570" width="205" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProviderReply_di" bpmnElement="Task_ProviderReply">
+        <dc:Bounds x="1580" y="570" width="205" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Provider_di" bpmnElement="End_Provider">
+        <dc:Bounds x="1850" y="595" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P1_di" bpmnElement="Flow_P1">
+        <di:waypoint x="1226" y="613" />
+        <di:waypoint x="1300" y="613" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_di" bpmnElement="Flow_P2">
+        <di:waypoint x="1505" y="613" />
+        <di:waypoint x="1580" y="613" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_di" bpmnElement="Flow_P3">
+        <di:waypoint x="1785" y="613" />
+        <di:waypoint x="1850" y="613" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Producer_di" bpmnElement="Participant_Producer" isHorizontal="true">
+        <dc:Bounds x="30" y="755" width="2260" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Message_PayoutInstructions_di" bpmnElement="Message_PayoutInstructions">
+        <di:waypoint x="1260" y="231" />
+        <di:waypoint x="1260" y="613" />
+        <di:waypoint x="1226" y="613" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Message_PayoutResult_di" bpmnElement="Message_PayoutResult">
+        <di:waypoint x="1680" y="570" />
+        <di:waypoint x="1680" y="485" />
+        <di:waypoint x="1475" y="485" />
+        <di:waypoint x="1475" y="231" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Message_PaidStatement_di" bpmnElement="Message_PaidStatement">
+        <di:waypoint x="2100" y="231" />
+        <di:waypoint x="2100" y="300" />
+        <di:waypoint x="2310" y="300" />
+        <di:waypoint x="2310" y="730" />
+        <di:waypoint x="2100" y="730" />
+        <di:waypoint x="2100" y="755" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Message_PayoutIssue_di" bpmnElement="Message_PayoutIssue">
+        <di:waypoint x="2062" y="406" />
+        <di:waypoint x="2062" y="755" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ProductListing_Sprint2" targetNamespace="https://regional-food-network.example.edu/sprint2" exporter="Camunda Web Modeler" exporterVersion="19abde7" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <bpmn:collaboration id="Collab_ProductListing_Sprint2">
+    <bpmn:participant id="Participant_Marketplace_Sprint2" name="Regional Food Network Marketplace — Producer Listing (Sprint 2 demo)" processRef="Process_ProductListing_Sprint2" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_ProductListing_Sprint2" name="Producer Product Listing — Sprint 2 automation" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_Sprint2">
+      <bpmn:lane id="Lane_Producer_Sprint2" name="Producer (Camunda user tasks)">
+        <bpmn:flowNodeRef>Start_Listing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SubmitProduct</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CorrectProduct</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Join</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Backend_Sprint2" name="Marketplace backend (Python job workers)">
+        <bpmn:flowNodeRef>Task_ValidateProduct</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Valid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Organic</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerifyOrganic</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Verification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PublishListing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Published</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecordPending</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Pending</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Listing" name="Producer chooses to list a product">
+      <bpmn:outgoing>Flow_StartSubmit</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_SubmitProduct" name="Enter product details">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form-producer-listing-s2" bindingType="deployment" />
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_StartSubmit</bpmn:incoming>
+      <bpmn:outgoing>Flow_SubmitJoin</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Join" name="Initial or corrected submission">
+      <bpmn:incoming>Flow_SubmitJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_CorrectionJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_JoinValidate</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_ValidateProduct" name="Validate required product details">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="s2-validate-product" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_JoinValidate</bpmn:incoming>
+      <bpmn:outgoing>Flow_ValidateDecision</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_Valid" name="Details valid?" default="Flow_ValidNo">
+      <bpmn:incoming>Flow_ValidateDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_ValidYes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ValidNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_CorrectProduct" name="Producer corrects product details or certification">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form-producer-correction-s2" bindingType="deployment" />
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ValidNo</bpmn:incoming>
+      <bpmn:incoming>Flow_CertRejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_CorrectionJoin</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Organic" name="Organic certification claimed?" default="Flow_OrganicNo">
+      <bpmn:incoming>Flow_ValidYes</bpmn:incoming>
+      <bpmn:outgoing>Flow_OrganicYes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_OrganicNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_VerifyOrganic" name="Check certification (simulated external service)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="s2-verify-organic" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_OrganicYes</bpmn:incoming>
+      <bpmn:outgoing>Flow_VerifyDecision</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_Verification" name="Verification result?" default="Flow_CertRejected">
+      <bpmn:incoming>Flow_VerifyDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_CertApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CertUnavailable</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CertRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_PublishListing" name="Publish product (simulated catalogue)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="s2-publish-product" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_OrganicNo</bpmn:incoming>
+      <bpmn:incoming>Flow_CertApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_Published</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_Published" name="Listing published">
+      <bpmn:incoming>Flow_Published</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_RecordPending" name="Record verification pending">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="s2-record-pending" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_CertUnavailable</bpmn:incoming>
+      <bpmn:outgoing>Flow_PendingDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_Pending" name="Pending verification: not published">
+      <bpmn:incoming>Flow_PendingDone</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_StartSubmit" sourceRef="Start_Listing" targetRef="Task_SubmitProduct" />
+    <bpmn:sequenceFlow id="Flow_SubmitJoin" sourceRef="Task_SubmitProduct" targetRef="Gateway_Join" />
+    <bpmn:sequenceFlow id="Flow_JoinValidate" sourceRef="Gateway_Join" targetRef="Task_ValidateProduct" />
+    <bpmn:sequenceFlow id="Flow_ValidateDecision" sourceRef="Task_ValidateProduct" targetRef="Gateway_Valid" />
+    <bpmn:sequenceFlow id="Flow_ValidYes" name="Yes" sourceRef="Gateway_Valid" targetRef="Gateway_Organic">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= detailsValid = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ValidNo" name="No" sourceRef="Gateway_Valid" targetRef="Task_CorrectProduct" />
+    <bpmn:sequenceFlow id="Flow_CorrectionJoin" sourceRef="Task_CorrectProduct" targetRef="Gateway_Join" />
+    <bpmn:sequenceFlow id="Flow_OrganicYes" name="Yes" sourceRef="Gateway_Organic" targetRef="Task_VerifyOrganic">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= organicClaimed = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_OrganicNo" name="No" sourceRef="Gateway_Organic" targetRef="Task_PublishListing" />
+    <bpmn:sequenceFlow id="Flow_VerifyDecision" sourceRef="Task_VerifyOrganic" targetRef="Gateway_Verification" />
+    <bpmn:sequenceFlow id="Flow_CertApproved" name="Verified" sourceRef="Gateway_Verification" targetRef="Task_PublishListing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= verificationStatus = "VERIFIED"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_CertUnavailable" name="Unavailable" sourceRef="Gateway_Verification" targetRef="Task_RecordPending">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= verificationStatus = "UNAVAILABLE"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_CertRejected" name="Rejected / correct claim" sourceRef="Gateway_Verification" targetRef="Task_CorrectProduct" />
+    <bpmn:sequenceFlow id="Flow_Published" sourceRef="Task_PublishListing" targetRef="End_Published" />
+    <bpmn:sequenceFlow id="Flow_PendingDone" sourceRef="Task_RecordPending" targetRef="End_Pending" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_ProductListing_Sprint2">
+    <bpmndi:BPMNPlane id="Plane_ProductListing_Sprint2" bpmnElement="Collab_ProductListing_Sprint2">
+      <bpmndi:BPMNShape id="Participant_Marketplace_Sprint2_di" bpmnElement="Participant_Marketplace_Sprint2">
+        <dc:Bounds x="60" y="100" width="1710" height="570" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Backend_Sprint2_di" bpmnElement="Lane_Backend_Sprint2">
+        <dc:Bounds x="90" y="295" width="1680" height="375" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Producer_Sprint2_di" bpmnElement="Lane_Producer_Sprint2">
+        <dc:Bounds x="90" y="100" width="1680" height="195" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Listing_di" bpmnElement="Start_Listing">
+        <dc:Bounds x="125" y="166" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SubmitProduct_di" bpmnElement="Task_SubmitProduct">
+        <dc:Bounds x="211" y="140" width="165" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Join_di" bpmnElement="Gateway_Join" isMarkerVisible="true">
+        <dc:Bounds x="420" y="162" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateProduct_di" bpmnElement="Task_ValidateProduct">
+        <dc:Bounds x="500" y="380" width="170" height="85" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Valid_di" bpmnElement="Gateway_Valid" isMarkerVisible="true">
+        <dc:Bounds x="715" y="397" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CorrectProduct_di" bpmnElement="Task_CorrectProduct">
+        <dc:Bounds x="650" y="145" width="195" height="88" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Organic_di" bpmnElement="Gateway_Organic" isMarkerVisible="true">
+        <dc:Bounds x="865" y="397" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerifyOrganic_di" bpmnElement="Task_VerifyOrganic">
+        <dc:Bounds x="1000" y="380" width="185" height="85" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Verification_di" bpmnElement="Gateway_Verification" isMarkerVisible="true">
+        <dc:Bounds x="1220" y="397" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PublishListing_di" bpmnElement="Task_PublishListing">
+        <dc:Bounds x="1420" y="380" width="165" height="85" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Published_di" bpmnElement="End_Published">
+        <dc:Bounds x="1640" y="404" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RecordPending_di" bpmnElement="Task_RecordPending">
+        <dc:Bounds x="1415" y="555" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Pending_di" bpmnElement="End_Pending">
+        <dc:Bounds x="1640" y="575" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_StartSubmit_di" bpmnElement="Flow_StartSubmit">
+        <di:waypoint x="161" y="184" />
+        <di:waypoint x="211" y="184" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SubmitJoin_di" bpmnElement="Flow_SubmitJoin">
+        <di:waypoint x="376" y="185" />
+        <di:waypoint x="420" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_JoinValidate_di" bpmnElement="Flow_JoinValidate">
+        <di:waypoint x="445" y="212" />
+        <di:waypoint x="445" y="422" />
+        <di:waypoint x="500" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ValidateDecision_di" bpmnElement="Flow_ValidateDecision">
+        <di:waypoint x="670" y="422" />
+        <di:waypoint x="715" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ValidYes_di" bpmnElement="Flow_ValidYes">
+        <di:waypoint x="765" y="422" />
+        <di:waypoint x="865" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ValidNo_di" bpmnElement="Flow_ValidNo">
+        <di:waypoint x="740" y="397" />
+        <di:waypoint x="740" y="233" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CorrectionJoin_di" bpmnElement="Flow_CorrectionJoin">
+        <di:waypoint x="650" y="185" />
+        <di:waypoint x="565" y="185" />
+        <di:waypoint x="565" y="120" />
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="445" y="162" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OrganicYes_di" bpmnElement="Flow_OrganicYes">
+        <di:waypoint x="915" y="422" />
+        <di:waypoint x="1000" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OrganicNo_di" bpmnElement="Flow_OrganicNo">
+        <di:waypoint x="890" y="447" />
+        <di:waypoint x="890" y="510" />
+        <di:waypoint x="1365" y="510" />
+        <di:waypoint x="1365" y="422" />
+        <di:waypoint x="1420" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_VerifyDecision_di" bpmnElement="Flow_VerifyDecision">
+        <di:waypoint x="1185" y="422" />
+        <di:waypoint x="1220" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CertApproved_di" bpmnElement="Flow_CertApproved">
+        <di:waypoint x="1270" y="422" />
+        <di:waypoint x="1420" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CertUnavailable_di" bpmnElement="Flow_CertUnavailable">
+        <di:waypoint x="1245" y="447" />
+        <di:waypoint x="1245" y="595" />
+        <di:waypoint x="1415" y="595" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CertRejected_di" bpmnElement="Flow_CertRejected">
+        <di:waypoint x="1245" y="397" />
+        <di:waypoint x="1245" y="265" />
+        <di:waypoint x="747" y="265" />
+        <di:waypoint x="747" y="233" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Published_di" bpmnElement="Flow_Published">
+        <di:waypoint x="1585" y="422" />
+        <di:waypoint x="1640" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PendingDone_di" bpmnElement="Flow_PendingDone">
+        <di:waypoint x="1595" y="595" />
+        <di:waypoint x="1640" y="595" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

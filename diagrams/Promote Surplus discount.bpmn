@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_Surplus" targetNamespace="http://example.org/food-network/surplus" exporter="Camunda Web Modeler" exporterVersion="19abde7" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
+  <collaboration id="Collaboration_Surplus">
+    <participant id="Participant_Marketplace" name="Regional Food Network Marketplace" processRef="Process_Surplus" />
+  </collaboration>
+  <process id="Process_Surplus" name="Promote Surplus Discount" isExecutable="true">
+    <laneSet id="LaneSet_Surplus">
+      <lane id="Lane_Producer" name="Producer">
+        <flowNodeRef>Start_Surplus</flowNodeRef>
+        <flowNodeRef>Task_Identify</flowNodeRef>
+        <flowNodeRef>Task_Propose</flowNodeRef>
+        <flowNodeRef>Task_Correct</flowNodeRef>
+      </lane>
+      <lane id="Lane_Backend" name="Marketplace Backend">
+        <flowNodeRef>Task_Validate</flowNodeRef>
+        <flowNodeRef>Gateway_Valid</flowNodeRef>
+        <flowNodeRef>Task_Publish</flowNodeRef>
+        <flowNodeRef>Task_Update</flowNodeRef>
+        <flowNodeRef>Task_Notify</flowNodeRef>
+        <flowNodeRef>End_Available</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="Start_Surplus" name="Surplus identified">
+      <outgoing>Flow_1</outgoing>
+    </startEvent>
+    <userTask id="Task_Identify" name="Review stock and expiry">
+      <extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="surplus-stock-review-form" />
+      </extensionElements>
+      <incoming>Flow_1</incoming>
+      <outgoing>Flow_2</outgoing>
+    </userTask>
+    <userTask id="Task_Propose" name="Enter discount and end date">
+      <extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="surplus-discount-form" />
+      </extensionElements>
+      <incoming>Flow_2</incoming>
+      <outgoing>Flow_3</outgoing>
+    </userTask>
+    <serviceTask id="Task_Validate" name="Validate listing, stock and offer">
+      <extensionElements>
+        <zeebe:taskDefinition type="validate-surplus-offer" retries="3" />
+      </extensionElements>
+      <incoming>Flow_3</incoming>
+      <incoming>Flow_7</incoming>
+      <outgoing>Flow_4</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="Gateway_Valid" name="Offer valid?" default="Flow_6">
+      <incoming>Flow_4</incoming>
+      <outgoing>Flow_5</outgoing>
+      <outgoing>Flow_6</outgoing>
+    </exclusiveGateway>
+    <userTask id="Task_Correct" name="Correct discount details">
+      <extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="surplus-correction-form" />
+      </extensionElements>
+      <incoming>Flow_6</incoming>
+      <outgoing>Flow_7</outgoing>
+    </userTask>
+    <serviceTask id="Task_Publish" name="Publish discounted listing">
+      <extensionElements>
+        <zeebe:taskDefinition type="publish-surplus-discount" retries="3" />
+      </extensionElements>
+      <incoming>Flow_5</incoming>
+      <outgoing>Flow_8</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_Update" name="Update catalogue and audit trail">
+      <extensionElements>
+        <zeebe:taskDefinition type="update-catalogue-audit" retries="3" />
+      </extensionElements>
+      <incoming>Flow_8</incoming>
+      <outgoing>Flow_9</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_Notify" name="Notify opted-in customers">
+      <extensionElements>
+        <zeebe:taskDefinition type="notify-surplus-customers" retries="3" />
+      </extensionElements>
+      <incoming>Flow_9</incoming>
+      <outgoing>Flow_10</outgoing>
+    </serviceTask>
+    <endEvent id="End_Available" name="Discount available">
+      <incoming>Flow_10</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_1" sourceRef="Start_Surplus" targetRef="Task_Identify" />
+    <sequenceFlow id="Flow_2" sourceRef="Task_Identify" targetRef="Task_Propose" />
+    <sequenceFlow id="Flow_3" sourceRef="Task_Propose" targetRef="Task_Validate" />
+    <sequenceFlow id="Flow_4" sourceRef="Task_Validate" targetRef="Gateway_Valid" />
+    <sequenceFlow id="Flow_5" name="Yes" sourceRef="Gateway_Valid" targetRef="Task_Publish">
+      <conditionExpression xsi:type="tFormalExpression">= offerValid</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="Flow_6" name="No" sourceRef="Gateway_Valid" targetRef="Task_Correct" />
+    <sequenceFlow id="Flow_7" sourceRef="Task_Correct" targetRef="Task_Validate" />
+    <sequenceFlow id="Flow_8" sourceRef="Task_Publish" targetRef="Task_Update" />
+    <sequenceFlow id="Flow_9" sourceRef="Task_Update" targetRef="Task_Notify" />
+    <sequenceFlow id="Flow_10" sourceRef="Task_Notify" targetRef="End_Available" />
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Surplus">
+    <bpmndi:BPMNPlane id="BPMNPlane_Surplus" bpmnElement="Collaboration_Surplus">
+      <bpmndi:BPMNShape id="Participant_Marketplace_di" bpmnElement="Participant_Marketplace" isHorizontal="true">
+        <dc:Bounds x="80" y="75" width="1695" height="485" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Backend_di" bpmnElement="Lane_Backend" isHorizontal="true">
+        <dc:Bounds x="110" y="300" width="1665" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Producer_di" bpmnElement="Lane_Producer" isHorizontal="true">
+        <dc:Bounds x="110" y="75" width="1665" height="225" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Surplus_di" bpmnElement="Start_Surplus">
+        <dc:Bounds x="160" y="175" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Identify_di" bpmnElement="Task_Identify">
+        <dc:Bounds x="245" y="145" width="155" height="95" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Propose_di" bpmnElement="Task_Propose">
+        <dc:Bounds x="455" y="145" width="165" height="95" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Validate_di" bpmnElement="Task_Validate">
+        <dc:Bounds x="675" y="370" width="165" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Valid_di" bpmnElement="Gateway_Valid" isMarkerVisible="true">
+        <dc:Bounds x="905" y="395" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Correct_di" bpmnElement="Task_Correct">
+        <dc:Bounds x="885" y="145" width="165" height="95" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Publish_di" bpmnElement="Task_Publish">
+        <dc:Bounds x="1040" y="370" width="155" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Update_di" bpmnElement="Task_Update">
+        <dc:Bounds x="1250" y="370" width="155" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Notify_di" bpmnElement="Task_Notify">
+        <dc:Bounds x="1460" y="370" width="160" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Available_di" bpmnElement="End_Available">
+        <dc:Bounds x="1695" y="402" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="196" y="193" />
+        <di:waypoint x="245" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="400" y="193" />
+        <di:waypoint x="455" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="620" y="193" />
+        <di:waypoint x="650" y="193" />
+        <di:waypoint x="650" y="420" />
+        <di:waypoint x="675" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="840" y="420" />
+        <di:waypoint x="905" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="955" y="420" />
+        <di:waypoint x="1040" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="995" y="390" width="32" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="930" y="395" />
+        <di:waypoint x="930" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="940" y="300" width="32" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="885" y="193" />
+        <di:waypoint x="855" y="193" />
+        <di:waypoint x="855" y="330" />
+        <di:waypoint x="650" y="330" />
+        <di:waypoint x="650" y="420" />
+        <di:waypoint x="675" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="1195" y="420" />
+        <di:waypoint x="1250" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1405" y="420" />
+        <di:waypoint x="1460" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1620" y="420" />
+        <di:waypoint x="1695" y="420" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

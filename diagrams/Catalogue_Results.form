@@ -1,0 +1,22 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "19abde7"
+  },
+  "schemaVersion": 18,
+  "id": "catalogue-results-form",
+  "components": [
+    {
+      "type": "text",
+      "id": "IntroResults",
+      "layout": {
+        "row": "Row_IntroResults",
+        "columns": null
+      },
+      "text": "# Catalogue results\nProduct results have been retrieved. Inspect the result variables in Operate or the connected catalogue application. Complete this task after reviewing the results."
+    }
+  ],
+  "type": "default"
+}

@@ -1,0 +1,87 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "19abde7"
+  },
+  "schemaVersion": 18,
+  "id": "catalogue-search-form",
+  "components": [
+    {
+      "type": "text",
+      "id": "Intro",
+      "layout": {
+        "row": "Row_Intro",
+        "columns": null
+      },
+      "text": "# Browse or search the catalogue\nSelect a mode and enter a category or search term."
+    },
+    {
+      "type": "select",
+      "id": "Mode",
+      "layout": {
+        "row": "Row_Mode",
+        "columns": null
+      },
+      "label": "Browse or search?",
+      "key": "mode",
+      "values": [
+        {
+          "label": "Browse by category",
+          "value": "browse"
+        },
+        {
+          "label": "Search by keyword",
+          "value": "search"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "select",
+      "id": "Category",
+      "layout": {
+        "row": "Row_Category",
+        "columns": null
+      },
+      "label": "Product category (browse mode)",
+      "key": "category",
+      "values": [
+        {
+          "label": "Fruit and vegetables",
+          "value": "Fruit and vegetables"
+        },
+        {
+          "label": "Meat and poultry",
+          "value": "Meat and poultry"
+        },
+        {
+          "label": "Dairy and eggs",
+          "value": "Dairy and eggs"
+        },
+        {
+          "label": "Bakery",
+          "value": "Bakery"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ]
+    },
+    {
+      "type": "textfield",
+      "id": "Keywords",
+      "layout": {
+        "row": "Row_Keywords",
+        "columns": null
+      },
+      "label": "Search keywords (search mode)",
+      "key": "searchTerm"
+    }
+  ],
+  "type": "default"
+}

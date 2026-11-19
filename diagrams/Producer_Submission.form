@@ -1,0 +1,209 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "19abde7"
+  },
+  "schemaVersion": 18,
+  "id": "form-producer-listing-s2",
+  "components": [
+    {
+      "type": "text",
+      "id": "Text_Intro",
+      "layout": {
+        "row": "Row_Text_Intro",
+        "columns": null
+      },
+      "text": "# Producer product listing\nEnter the details below, then submit for marketplace validation."
+    },
+    {
+      "type": "textfield",
+      "id": "Field_01",
+      "layout": {
+        "row": "Row_Field_01",
+        "columns": null
+      },
+      "label": "Product name",
+      "key": "productName",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "Field_02",
+      "layout": {
+        "row": "Row_Field_02",
+        "columns": null
+      },
+      "label": "Description",
+      "key": "description",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "select",
+      "id": "Field_03",
+      "layout": {
+        "row": "Row_Field_03",
+        "columns": null
+      },
+      "label": "Category",
+      "key": "category",
+      "validate": {
+        "required": true
+      },
+      "values": [
+        {
+          "label": "Fruit and vegetables",
+          "value": "Fruit and vegetables"
+        },
+        {
+          "label": "Meat and poultry",
+          "value": "Meat and poultry"
+        },
+        {
+          "label": "Dairy and eggs",
+          "value": "Dairy and eggs"
+        },
+        {
+          "label": "Bakery",
+          "value": "Bakery"
+        },
+        {
+          "label": "Preserves and other",
+          "value": "Preserves and other"
+        }
+      ]
+    },
+    {
+      "type": "number",
+      "id": "Field_04",
+      "layout": {
+        "row": "Row_Field_04",
+        "columns": null
+      },
+      "label": "Price (GBP)",
+      "key": "price",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "number",
+      "id": "Field_05",
+      "layout": {
+        "row": "Row_Field_05",
+        "columns": null
+      },
+      "label": "Available quantity (units)",
+      "key": "quantity",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "textfield",
+      "id": "Field_06",
+      "layout": {
+        "row": "Row_Field_06",
+        "columns": null
+      },
+      "label": "Available from (YYYY-MM-DD)",
+      "key": "availableFrom",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "textfield",
+      "id": "Field_07",
+      "layout": {
+        "row": "Row_Field_07",
+        "columns": null
+      },
+      "label": "Available until (YYYY-MM-DD)",
+      "key": "availableTo",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "textfield",
+      "id": "Field_08",
+      "layout": {
+        "row": "Row_Field_08",
+        "columns": null
+      },
+      "label": "Farm origin",
+      "key": "farmOrigin",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "type": "textfield",
+      "id": "Field_09",
+      "layout": {
+        "row": "Row_Field_09",
+        "columns": null
+      },
+      "label": "Harvest date (YYYY-MM-DD, optional)",
+      "key": "harvestDate"
+    },
+    {
+      "type": "textfield",
+      "id": "Field_10",
+      "layout": {
+        "row": "Row_Field_10",
+        "columns": null
+      },
+      "label": "Best-before date (YYYY-MM-DD, optional)",
+      "key": "bestBefore"
+    },
+    {
+      "type": "textarea",
+      "id": "Field_11",
+      "layout": {
+        "row": "Row_Field_11",
+        "columns": null
+      },
+      "label": "Allergen details (if relevant)",
+      "key": "allergenDetails"
+    },
+    {
+      "type": "checkbox",
+      "id": "Field_12",
+      "layout": {
+        "row": "Row_Field_12",
+        "columns": null
+      },
+      "label": "Organic certification claimed?",
+      "key": "organicClaimed",
+      "defaultValue": false
+    },
+    {
+      "type": "textfield",
+      "id": "Field_13",
+      "layout": {
+        "row": "Row_Field_13",
+        "columns": null
+      },
+      "label": "Certification code (if organic)",
+      "key": "certificationCode"
+    },
+    {
+      "type": "button",
+      "id": "Button_Submit",
+      "layout": {
+        "row": "Row_Button_Submit",
+        "columns": null
+      },
+      "label": "Submit for validation",
+      "action": "submit"
+    }
+  ],
+  "type": "default"
+}

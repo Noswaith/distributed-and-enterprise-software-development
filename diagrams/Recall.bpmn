@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="aa92d9c" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="19abde7" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
   <bpmn:collaboration id="Collaboration_16n33hy" name="Recall">
     <bpmn:participant id="Participant_0l144zc" name="Customer" processRef="Process_11wwbdf" />
     <bpmn:participant id="Participant_1bc0a49" name="Supplier" processRef="Process_05hjct0" />
@@ -10,13 +10,9 @@
     <bpmn:messageFlow id="Flow_167g0xz" sourceRef="Event_0ujyh95" targetRef="Event_1hxl4r2" />
   </bpmn:collaboration>
   <bpmn:process id="Process_11wwbdf" name="New BPMN diagram" isExecutable="true">
-    <bpmn:task id="Activity_1caccjt" name="Customer returns/ discards product">
-      <bpmn:incoming>Flow_0fcfhj9</bpmn:incoming>
-      <bpmn:outgoing>Flow_11u6at7</bpmn:outgoing>
-    </bpmn:task>
     <bpmn:startEvent id="StartEvent_1" name="Recall Recieved">
       <bpmn:outgoing>Flow_0fcfhj9</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1xdku41" />
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1xdku41" messageRef="Message_RecallNotice" />
     </bpmn:startEvent>
     <bpmn:endEvent id="Event_07go15y" name="Recall processed">
       <bpmn:incoming>Flow_1n0dhe4</bpmn:incoming>
@@ -24,20 +20,21 @@
     <bpmn:intermediateCatchEvent id="Event_0dtj2ii" name="Refund details">
       <bpmn:incoming>Flow_11u6at7</bpmn:incoming>
       <bpmn:outgoing>Flow_1n0dhe4</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_11ycqv3" />
+      <bpmn:messageEventDefinition id="MessageEventDefinition_11ycqv3" messageRef="Message_RefundDetails" />
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_0fcfhj9" sourceRef="StartEvent_1" targetRef="Activity_1caccjt" />
     <bpmn:sequenceFlow id="Flow_11u6at7" sourceRef="Activity_1caccjt" targetRef="Event_0dtj2ii" />
     <bpmn:sequenceFlow id="Flow_1n0dhe4" sourceRef="Event_0dtj2ii" targetRef="Event_07go15y" />
+    <bpmn:userTask id="Activity_1caccjt" name="Customer returns/ discards product">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="recall-return-disposal-form" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0fcfhj9</bpmn:incoming>
+      <bpmn:outgoing>Flow_11u6at7</bpmn:outgoing>
+    </bpmn:userTask>
   </bpmn:process>
   <bpmn:process id="Process_05hjct0" isExecutable="false">
-    <bpmn:startEvent id="Event_1juwyd4" name="Initiate recall">
-      <bpmn:outgoing>Flow_1li9hg3</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:task id="Activity_0x5dbvn" name="Supplier initiates recall">
-      <bpmn:incoming>Flow_1li9hg3</bpmn:incoming>
-      <bpmn:outgoing>Flow_17j2yhr</bpmn:outgoing>
-    </bpmn:task>
     <bpmn:intermediateCatchEvent id="Event_1qvgjz0" name="Receive refund details">
       <bpmn:incoming>Flow_0fupnrt</bpmn:incoming>
       <bpmn:outgoing>Flow_1jkkdf9</bpmn:outgoing>
@@ -55,6 +52,19 @@
     <bpmn:sequenceFlow id="Flow_17j2yhr" sourceRef="Activity_0x5dbvn" targetRef="Event_0ujyh95" />
     <bpmn:sequenceFlow id="Flow_0fupnrt" sourceRef="Event_0ujyh95" targetRef="Event_1qvgjz0" />
     <bpmn:sequenceFlow id="Flow_1jkkdf9" sourceRef="Event_1qvgjz0" targetRef="Event_0f72e08" />
+    <bpmn:userTask id="Activity_0x5dbvn" name="Supplier initiates recall">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1li9hg3</bpmn:incoming>
+      <bpmn:outgoing>Flow_17j2yhr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:startEvent id="Event_1juwyd4" name="Problem Spotted">
+      <bpmn:outgoing>Flow_1li9hg3</bpmn:outgoing>
+      <bpmn:conditionalEventDefinition id="ConditionalEventDefinition_0jdjedg">
+        <bpmn:condition xsi:type="bpmn:tFormalExpression" />
+      </bpmn:conditionalEventDefinition>
+    </bpmn:startEvent>
   </bpmn:process>
   <bpmn:process id="Process_105jqai" isExecutable="false">
     <bpmn:intermediateThrowEvent id="Event_1utmc2w" name="Refund details">
@@ -62,10 +72,6 @@
       <bpmn:outgoing>Flow_1jaarhz</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_17lsfvm" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:task id="Activity_1tvlh45" name="Collect all customer details">
-      <bpmn:incoming>Flow_0iqyzbr</bpmn:incoming>
-      <bpmn:outgoing>Flow_009ksrd</bpmn:outgoing>
-    </bpmn:task>
     <bpmn:exclusiveGateway id="Gateway_1rt9zw0" name="Any product sold">
       <bpmn:incoming>Flow_1q6n85o</bpmn:incoming>
       <bpmn:outgoing>Flow_12bz605</bpmn:outgoing>
@@ -79,18 +85,6 @@
     <bpmn:endEvent id="Event_1nw4mot" name="Recall handled">
       <bpmn:incoming>Flow_12bz605</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Activity_01xt314" name="Product marked as unavailable">
-      <bpmn:incoming>Flow_0gt7k38</bpmn:incoming>
-      <bpmn:outgoing>Flow_1q6n85o</bpmn:outgoing>
-    </bpmn:task>
-    <bpmn:task id="Activity_0wr7xtp" name="Compile Refunds">
-      <bpmn:incoming>Flow_0bxraox</bpmn:incoming>
-      <bpmn:outgoing>Flow_0inaqh5</bpmn:outgoing>
-    </bpmn:task>
-    <bpmn:task id="Activity_07gvahy" name="Issue Refund">
-      <bpmn:incoming>Flow_0inaqh5</bpmn:incoming>
-      <bpmn:outgoing>Flow_1wh58y3</bpmn:outgoing>
-    </bpmn:task>
     <bpmn:parallelGateway id="Gateway_1mfqjkq">
       <bpmn:incoming>Flow_1wh58y3</bpmn:incoming>
       <bpmn:outgoing>Flow_1hn1go8</bpmn:outgoing>
@@ -104,10 +98,6 @@
       <bpmn:incoming>Flow_10s71a7</bpmn:incoming>
       <bpmn:outgoing>Flow_14nf43b</bpmn:outgoing>
     </bpmn:parallelGateway>
-    <bpmn:task id="Activity_0wdfa3s" name="Deduct from vendor payout">
-      <bpmn:incoming>Flow_1tfkd02</bpmn:incoming>
-      <bpmn:outgoing>Flow_1w65zqf</bpmn:outgoing>
-    </bpmn:task>
     <bpmn:intermediateThrowEvent id="Event_0ayl0v7" name="Notify supplier of refund details">
       <bpmn:incoming>Flow_1w65zqf</bpmn:incoming>
       <bpmn:outgoing>Flow_10s71a7</bpmn:outgoing>
@@ -131,21 +121,55 @@
     <bpmn:sequenceFlow id="Flow_14nf43b" sourceRef="Gateway_0xfj4vq" targetRef="Event_0bhom26" />
     <bpmn:sequenceFlow id="Flow_10s71a7" sourceRef="Event_0ayl0v7" targetRef="Gateway_0xfj4vq" />
     <bpmn:sequenceFlow id="Flow_1w65zqf" sourceRef="Activity_0wdfa3s" targetRef="Event_0ayl0v7" />
+    <bpmn:scriptTask id="Activity_01xt314" name="Product marked as unavailable">
+      <bpmn:extensionElements>
+        <zeebe:script />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0gt7k38</bpmn:incoming>
+      <bpmn:outgoing>Flow_1q6n85o</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_1tvlh45" name="Collect all customer details">
+      <bpmn:extensionElements>
+        <zeebe:script />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0iqyzbr</bpmn:incoming>
+      <bpmn:outgoing>Flow_009ksrd</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_0wr7xtp" name="Compile Refunds">
+      <bpmn:extensionElements>
+        <zeebe:script />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0bxraox</bpmn:incoming>
+      <bpmn:outgoing>Flow_0inaqh5</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="Activity_07gvahy" name="Issue Refund">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0inaqh5</bpmn:incoming>
+      <bpmn:outgoing>Flow_1wh58y3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Activity_0wdfa3s" name="Deduct from vendor payout">
+      <bpmn:incoming>Flow_1tfkd02</bpmn:incoming>
+      <bpmn:outgoing>Flow_1w65zqf</bpmn:outgoing>
+    </bpmn:serviceTask>
   </bpmn:process>
+  <bpmn:message id="Message_RecallNotice" name="recall-notice" />
+  <bpmn:message id="Message_RefundDetails" name="recall-refund-details">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="= recallId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_16n33hy">
       <bpmndi:BPMNShape id="Participant_0l144zc_di" bpmnElement="Participant_0l144zc" isHorizontal="true">
         <dc:Bounds x="150" y="80" width="1160" height="130" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1caccjt_di" bpmnElement="Activity_1caccjt">
-        <dc:Bounds x="710" y="110" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0msnuo5_di" bpmnElement="StartEvent_1">
         <dc:Bounds x="602" y="132" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="580" y="108" width="80" height="14" />
+          <dc:Bounds x="591" y="106" width="58" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_07go15y_di" bpmnElement="Event_07go15y">
@@ -159,6 +183,9 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1005" y="113" width="71" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ndfq89_di" bpmnElement="Activity_1caccjt">
+        <dc:Bounds x="710" y="110" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0fcfhj9_di" bpmnElement="Flow_0fcfhj9">
         <di:waypoint x="638" y="150" />
@@ -174,16 +201,6 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Participant_1bc0a49_di" bpmnElement="Participant_1bc0a49" isHorizontal="true">
         <dc:Bounds x="150" y="540" width="1160" height="140" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1juwyd4_di" bpmnElement="Event_1juwyd4">
-        <dc:Bounds x="202" y="582" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="189" y="625" width="62" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0x5dbvn_di" bpmnElement="Activity_0x5dbvn">
-        <dc:Bounds x="290" y="560" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0487ima_di" bpmnElement="Event_1qvgjz0">
@@ -202,6 +219,15 @@
         <dc:Bounds x="662" y="582" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="638" y="625" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1iuqy58_di" bpmnElement="Activity_0x5dbvn">
+        <dc:Bounds x="290" y="560" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1lyvkzn_di" bpmnElement="Event_1juwyd4">
+        <dc:Bounds x="202" y="582" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="191" y="555.5" width="80" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1li9hg3_di" bpmnElement="Flow_1li9hg3">
@@ -230,10 +256,6 @@
           <dc:Bounds x="979" y="266" width="42" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1tvlh45_di" bpmnElement="Activity_1tvlh45">
-        <dc:Bounds x="570" y="350" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1rt9zw0_di" bpmnElement="Gateway_1rt9zw0" isMarkerVisible="true">
         <dc:Bounds x="455" y="365" width="50" height="50" />
         <bpmndi:BPMNLabel>
@@ -252,18 +274,6 @@
           <dc:Bounds x="443" y="243" width="73" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_01xt314_di" bpmnElement="Activity_01xt314">
-        <dc:Bounds x="290" y="350" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0wr7xtp_di" bpmnElement="Activity_0wr7xtp">
-        <dc:Bounds x="690" y="240" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_07gvahy_di" bpmnElement="Activity_07gvahy">
-        <dc:Bounds x="830" y="240" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0h1up73_di" bpmnElement="Gateway_1mfqjkq">
         <dc:Bounds x="855" y="345" width="50" height="50" />
       </bpmndi:BPMNShape>
@@ -276,21 +286,32 @@
       <bpmndi:BPMNShape id="Gateway_1tjqm07_di" bpmnElement="Gateway_0xfj4vq">
         <dc:Bounds x="1135" y="255" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0wdfa3s_di" bpmnElement="Activity_0wdfa3s">
-        <dc:Bounds x="830" y="430" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1wbwurf_di" bpmnElement="Event_0ayl0v7">
         <dc:Bounds x="1012" y="452" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="989" y="426" width="82" height="27" />
+          <dc:Bounds x="989" y="414.5" width="82" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_06ktvnl_di" bpmnElement="Event_1hxl4r2">
         <dc:Bounds x="212" y="372" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="195" y="353" width="70" height="14" />
+          <dc:Bounds x="203" y="334.5" width="53" height="27" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0oel3uf_di" bpmnElement="Activity_01xt314">
+        <dc:Bounds x="290" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0btz5rh_di" bpmnElement="Activity_1tvlh45">
+        <dc:Bounds x="570" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_00shb3m_di" bpmnElement="Activity_0wr7xtp">
+        <dc:Bounds x="690" y="240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fq5bz7_di" bpmnElement="Activity_07gvahy">
+        <dc:Bounds x="830" y="240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0k5s9qy_di" bpmnElement="Activity_0wdfa3s">
+        <dc:Bounds x="830" y="430" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1hn1go8_di" bpmnElement="Flow_1hn1go8">
         <di:waypoint x="905" y="370" />

@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_Catalogue" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="19abde7" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <bpmn:error id="Error_Unavailable" name="Catalogue unavailable" errorCode="CATALOGUE_UNAVAILABLE" />
+  <bpmn:collaboration id="Collaboration_Catalogue">
+    <bpmn:participant id="Participant_Service" name="Browse and Search Catalogue Service" processRef="Process_BrowseSearchCatalogue" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_BrowseSearchCatalogue" name="Browse and Search Catalogue" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Customer" name="Customer">
+        <bpmn:flowNodeRef>Task_ShowError</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NoResults</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Choose</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Failed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Open</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Success</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_View</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Backend">
+        <bpmn:flowNodeRef>Task_Sales</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Stock</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Stock</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Join2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FlagOOS</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SubProcess_Retrieve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_Error</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Verified</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Results</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:subProcess id="SubProcess_Retrieve" name="Retrieve catalogue data">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>Flow_1x3ku0e</bpmn:outgoing>
+      <bpmn:property id="Property_1fqvof2" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DataInputAssociation_1xfb76a">
+        <bpmn:sourceRef>DataStoreReference_1dwbe7f</bpmn:sourceRef>
+        <bpmn:targetRef>Property_1fqvof2</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_0atedaf">
+        <bpmn:targetRef>DataStoreReference_1dwbe7f</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:startEvent id="Start_Inner" name="Begin catalogue retrieval">
+        <bpmn:outgoing>FI1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="GW_Mode" name="Browse or search?" default="Flow_Search">
+        <bpmn:incoming>FI1</bpmn:incoming>
+        <bpmn:outgoing>Flow_Browse</bpmn:outgoing>
+        <bpmn:outgoing>Flow_Search</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="Task_LoadCategory" name="Load category spreadsheet">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="load-category" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_Browse</bpmn:incoming>
+        <bpmn:outgoing>FI4</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="Task_QueryKeywords" name="Query Product Key Words">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="query-product-keywords" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_Search</bpmn:incoming>
+        <bpmn:outgoing>FI5</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="GW_Merge">
+        <bpmn:incoming>FI4</bpmn:incoming>
+        <bpmn:incoming>FI5</bpmn:incoming>
+        <bpmn:outgoing>FI6</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="Task_Retrieve" name="Retrieve product details by Product ID">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="retrieve-product-details" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>FI6</bpmn:incoming>
+        <bpmn:outgoing>FI7</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="End_Inner" name="Catalogue retrieved">
+        <bpmn:incoming>FI7</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="FI1" sourceRef="Start_Inner" targetRef="GW_Mode" />
+      <bpmn:sequenceFlow id="Flow_Browse" name="Browse" sourceRef="GW_Mode" targetRef="Task_LoadCategory">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= mode = "browse"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_Search" name="Search" sourceRef="GW_Mode" targetRef="Task_QueryKeywords" />
+      <bpmn:sequenceFlow id="FI4" sourceRef="Task_LoadCategory" targetRef="GW_Merge" />
+      <bpmn:sequenceFlow id="FI5" sourceRef="Task_QueryKeywords" targetRef="GW_Merge" />
+      <bpmn:sequenceFlow id="FI6" sourceRef="GW_Merge" targetRef="Task_Retrieve" />
+      <bpmn:sequenceFlow id="FI7" sourceRef="Task_Retrieve" targetRef="End_Inner" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Boundary_Error" name="Catalogue unavailable" attachedToRef="SubProcess_Retrieve">
+      <bpmn:outgoing>F21</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1" errorRef="Error_Unavailable" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="F1" sourceRef="Start_Open" targetRef="Task_Choose" />
+    <bpmn:sequenceFlow id="F19" sourceRef="Task_NoResults" targetRef="Task_Choose" />
+    <bpmn:sequenceFlow id="F2" sourceRef="Task_Choose" targetRef="SubProcess_Retrieve" />
+    <bpmn:sequenceFlow id="F20" sourceRef="Task_View" targetRef="End_Success" />
+    <bpmn:sequenceFlow id="F21" sourceRef="Boundary_Error" targetRef="Task_ShowError" />
+    <bpmn:sequenceFlow id="F22" sourceRef="Task_ShowError" targetRef="End_Failed" />
+    <bpmn:sequenceFlow id="F10" sourceRef="Task_Sales" targetRef="Task_Stock" />
+    <bpmn:sequenceFlow id="F11" sourceRef="Task_Stock" targetRef="GW_Stock" />
+    <bpmn:sequenceFlow id="Flow_InStock" name="Yes" sourceRef="GW_Stock" targetRef="GW_Join2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= inStock = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_NoStock" name="No" sourceRef="GW_Stock" targetRef="Task_FlagOOS" />
+    <bpmn:sequenceFlow id="F14" sourceRef="Task_FlagOOS" targetRef="GW_Join2" />
+    <bpmn:serviceTask id="Task_Sales" name="Apply Product Sales rules">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="apply-product-sales-rules" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1hwj6ll</bpmn:incoming>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+      <bpmn:property id="Property_1urogms" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DataInputAssociation_1tqedit">
+        <bpmn:sourceRef>DataStoreReference_1dwbe7f</bpmn:sourceRef>
+        <bpmn:targetRef>Property_1urogms</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_195rmsn">
+        <bpmn:targetRef>DataStoreReference_1dwbe7f</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Stock" name="Calculate stock (Available minus Reserve)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="check-stock" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F10</bpmn:incoming>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+      <bpmn:property id="Property_0m350vl" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DataInputAssociation_0uilzgc">
+        <bpmn:sourceRef>DataStoreReference_1dwbe7f</bpmn:sourceRef>
+        <bpmn:targetRef>Property_0m350vl</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_1klg8q4">
+        <bpmn:targetRef>DataStoreReference_1dwbe7f</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW_Stock" name="Stock available?" default="Flow_NoStock">
+      <bpmn:incoming>F11</bpmn:incoming>
+      <bpmn:outgoing>Flow_InStock</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NoStock</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="GW_Join2">
+      <bpmn:incoming>Flow_InStock</bpmn:incoming>
+      <bpmn:incoming>F14</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wx6ton</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_FlagOOS" name="Flag product as out of stock">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="flag-out-of-stock" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_NoStock</bpmn:incoming>
+      <bpmn:outgoing>F14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_ShowError" name="View temporary error message">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="catalogue-error-form" bindingType="deployment" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F21</bpmn:incoming>
+      <bpmn:outgoing>F22</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_NoResults" name="Review no results and refine search">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="catalogue-no-results-form" bindingType="deployment" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0v5ruco</bpmn:incoming>
+      <bpmn:outgoing>F19</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Choose" name="Choose category or enter search term">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="catalogue-search-form" bindingType="deployment" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:incoming>F19</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Failed" name="Search failed">
+      <bpmn:incoming>F22</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="Start_Open" name="Customer opens catalogue">
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="End_Success" name="Results displayed">
+      <bpmn:incoming>F20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="DataStoreReference_1dwbe7f" name="Product Catalogue" />
+    <bpmn:userTask id="Task_View" name="View results">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="catalogue-results-form" bindingType="deployment" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1ozqrdl</bpmn:incoming>
+      <bpmn:outgoing>F20</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0v5ruco" name="No" sourceRef="GW_Results" targetRef="Task_NoResults" />
+    <bpmn:exclusiveGateway id="GW_Verified" name="Data verified?" default="Flow_0bkjntf">
+      <bpmn:incoming>Flow_1x3ku0e</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hwj6ll</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0bkjntf</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1x3ku0e" sourceRef="SubProcess_Retrieve" targetRef="GW_Verified" />
+    <bpmn:sequenceFlow id="Flow_1hwj6ll" name="no" sourceRef="GW_Verified" targetRef="Task_Sales">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= dataVerified = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0wx6ton" sourceRef="GW_Join2" targetRef="GW_Results" />
+    <bpmn:sequenceFlow id="Flow_1ozqrdl" name="Yes" sourceRef="GW_Results" targetRef="Task_View">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= resultsFound</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="GW_Results" name="Results found?" default="Flow_0v5ruco">
+      <bpmn:incoming>Flow_0wx6ton</bpmn:incoming>
+      <bpmn:incoming>Flow_0bkjntf</bpmn:incoming>
+      <bpmn:outgoing>Flow_0v5ruco</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1ozqrdl</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0bkjntf" name="yes" sourceRef="GW_Verified" targetRef="GW_Results" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Catalogue">
+      <bpmndi:BPMNShape id="Participant_Service_di" bpmnElement="Participant_Service" isHorizontal="true">
+        <dc:Bounds x="160" y="160" width="2110" height="680" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="190" y="380" width="2080" height="460" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Customer_di" bpmnElement="Lane_Customer" isHorizontal="true">
+        <dc:Bounds x="190" y="160" width="2080" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubProcess_Retrieve_di" bpmnElement="SubProcess_Retrieve" isExpanded="true">
+        <dc:Bounds x="330" y="540" width="840" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Inner_di" bpmnElement="Start_Inner">
+        <dc:Bounds x="362" y="642" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Mode_di" bpmnElement="GW_Mode" isMarkerVisible="true">
+        <dc:Bounds x="440" y="635" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="490" y="646" width="50" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadCategory_di" bpmnElement="Task_LoadCategory">
+        <dc:Bounds x="560" y="560" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_QueryKeywords_di" bpmnElement="Task_QueryKeywords">
+        <dc:Bounds x="560" y="680" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Merge_di" bpmnElement="GW_Merge" isMarkerVisible="true">
+        <dc:Bounds x="720" y="635" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Retrieve_di" bpmnElement="Task_Retrieve">
+        <dc:Bounds x="820" y="620" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Inner_di" bpmnElement="End_Inner">
+        <dc:Bounds x="1000" y="642" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="FI1_di" bpmnElement="FI1">
+        <di:waypoint x="398" y="660" />
+        <di:waypoint x="440" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Browse_di" bpmnElement="Flow_Browse">
+        <di:waypoint x="465" y="635" />
+        <di:waypoint x="465" y="600" />
+        <di:waypoint x="560" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="496" y="608" width="37" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Search_di" bpmnElement="Flow_Search">
+        <di:waypoint x="465" y="685" />
+        <di:waypoint x="465" y="720" />
+        <di:waypoint x="560" y="720" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="497" y="703" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FI4_di" bpmnElement="FI4">
+        <di:waypoint x="660" y="600" />
+        <di:waypoint x="745" y="600" />
+        <di:waypoint x="745" y="635" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FI5_di" bpmnElement="FI5">
+        <di:waypoint x="660" y="720" />
+        <di:waypoint x="745" y="720" />
+        <di:waypoint x="745" y="685" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FI6_di" bpmnElement="FI6">
+        <di:waypoint x="770" y="660" />
+        <di:waypoint x="820" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FI7_di" bpmnElement="FI7">
+        <di:waypoint x="920" y="660" />
+        <di:waypoint x="1000" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Task_Sales_di" bpmnElement="Task_Sales">
+        <dc:Bounds x="1370" y="620" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Stock_di" bpmnElement="Task_Stock">
+        <dc:Bounds x="1510" y="620" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Stock_di" bpmnElement="GW_Stock" isMarkerVisible="true">
+        <dc:Bounds x="1645" y="635" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1629" y="613" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Join2_di" bpmnElement="GW_Join2" isMarkerVisible="true">
+        <dc:Bounds x="1765" y="635" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FlagOOS_di" bpmnElement="Task_FlagOOS">
+        <dc:Bounds x="1740" y="720" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ShowError_di" bpmnElement="Task_ShowError">
+        <dc:Bounds x="1050" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NoResults_di" bpmnElement="Task_NoResults">
+        <dc:Bounds x="1860" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Choose_di" bpmnElement="Task_Choose">
+        <dc:Bounds x="330" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Failed_di" bpmnElement="End_Failed">
+        <dc:Bounds x="1200" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1186" y="308" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Open_di" bpmnElement="Start_Open">
+        <dc:Bounds x="242" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="220" y="308" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Success_di" bpmnElement="End_Success">
+        <dc:Bounds x="2182" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2157" y="308" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_View_di" bpmnElement="Task_View">
+        <dc:Bounds x="2010" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Verified_di" bpmnElement="GW_Verified" isMarkerVisible="true">
+        <dc:Bounds x="1235" y="635" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1226" y="693" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Results_di" bpmnElement="GW_Results" isMarkerVisible="true">
+        <dc:Bounds x="2035" y="540" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2095" y="558" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_Error_di" bpmnElement="Boundary_Error">
+        <dc:Bounds x="1082" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1072" y="558" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
+        <di:waypoint x="278" y="290" />
+        <di:waypoint x="330" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F19_di" bpmnElement="F19">
+        <di:waypoint x="1910" y="250" />
+        <di:waypoint x="1910" y="220" />
+        <di:waypoint x="380" y="220" />
+        <di:waypoint x="380" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2">
+        <di:waypoint x="380" y="330" />
+        <di:waypoint x="380" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F20_di" bpmnElement="F20">
+        <di:waypoint x="2110" y="290" />
+        <di:waypoint x="2182" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F21_di" bpmnElement="F21">
+        <di:waypoint x="1100" y="522" />
+        <di:waypoint x="1100" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F22_di" bpmnElement="F22">
+        <di:waypoint x="1150" y="290" />
+        <di:waypoint x="1200" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1470" y="660" />
+        <di:waypoint x="1510" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="1610" y="660" />
+        <di:waypoint x="1645" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_InStock_di" bpmnElement="Flow_InStock">
+        <di:waypoint x="1695" y="660" />
+        <di:waypoint x="1765" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1721" y="635" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NoStock_di" bpmnElement="Flow_NoStock">
+        <di:waypoint x="1670" y="685" />
+        <di:waypoint x="1670" y="760" />
+        <di:waypoint x="1740" y="760" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1678" y="708" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F14_di" bpmnElement="F14">
+        <di:waypoint x="1790" y="720" />
+        <di:waypoint x="1790" y="685" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0v5ruco_di" bpmnElement="Flow_0v5ruco">
+        <di:waypoint x="2085" y="565" />
+        <di:waypoint x="2130" y="565" />
+        <di:waypoint x="2130" y="365" />
+        <di:waypoint x="1910" y="365" />
+        <di:waypoint x="1910" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1x3ku0e_di" bpmnElement="Flow_1x3ku0e">
+        <di:waypoint x="1170" y="660" />
+        <di:waypoint x="1235" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hwj6ll_di" bpmnElement="Flow_1hwj6ll">
+        <di:waypoint x="1285" y="660" />
+        <di:waypoint x="1370" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1321" y="642" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wx6ton_di" bpmnElement="Flow_0wx6ton">
+        <di:waypoint x="1815" y="660" />
+        <di:waypoint x="2060" y="660" />
+        <di:waypoint x="2060" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ozqrdl_di" bpmnElement="Flow_1ozqrdl">
+        <di:waypoint x="2060" y="540" />
+        <di:waypoint x="2060" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2066" y="430.5" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bkjntf_di" bpmnElement="Flow_0bkjntf">
+        <di:waypoint x="1260" y="635" />
+        <di:waypoint x="1260" y="565" />
+        <di:waypoint x="2035" y="565" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1266" y="597" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="DataStoreReference_1dwbe7f_di" bpmnElement="DataStoreReference_1dwbe7f" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1190" y="905" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1190" y="962" width="50" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DataInputAssociation_1xfb76a_di" bpmnElement="DataInputAssociation_1xfb76a">
+        <di:waypoint x="1190" y="910" />
+        <di:waypoint x="935" y="780" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0atedaf_di" bpmnElement="DataOutputAssociation_0atedaf">
+        <di:waypoint x="796" y="780" />
+        <di:waypoint x="1190" y="940" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataInputAssociation_1tqedit_di" bpmnElement="DataInputAssociation_1tqedit">
+        <di:waypoint x="1240" y="924" />
+        <di:waypoint x="1414" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_195rmsn_di" bpmnElement="DataOutputAssociation_195rmsn">
+        <di:waypoint x="1372" y="695" />
+        <di:waypoint x="1232" y="905" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataInputAssociation_0uilzgc_di" bpmnElement="DataInputAssociation_0uilzgc">
+        <di:waypoint x="1240" y="950" />
+        <di:waypoint x="1537" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1klg8q4_di" bpmnElement="DataOutputAssociation_1klg8q4">
+        <di:waypoint x="1510" y="684" />
+        <di:waypoint x="1240" y="940" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,22 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "19abde7"
+  },
+  "schemaVersion": 18,
+  "id": "catalogue-error-form",
+  "components": [
+    {
+      "type": "text",
+      "id": "IntroError",
+      "layout": {
+        "row": "Row_IntroError",
+        "columns": null
+      },
+      "text": "# Temporary catalogue issue\nThe catalogue could not be retrieved right now. Complete this task to finish this unsuccessful search attempt. If configured, review the error details in the process history."
+    }
+  ],
+  "type": "default"
+}

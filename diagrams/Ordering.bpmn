@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="aa92d9c" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="19abde7" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
   <bpmn:collaboration id="Collaboration_065tdgq" name="Ordering">
     <bpmn:participant id="Participant_0j0s2mn" name="Customer" processRef="Process_0fn5zzf" />
     <bpmn:participant id="Participant_0fr98qk" name="Backend" processRef="Process_0tx0z29" />
@@ -29,6 +29,9 @@
       <bpmn:incoming>Flow_08ovefc</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:intermediateThrowEvent id="Event_0cd9acj" name="Send Order details">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-order-details" retries="3" />
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_129cp0k</bpmn:incoming>
       <bpmn:outgoing>Flow_0uekopa</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1vaxj4w" />
@@ -50,19 +53,22 @@
     <bpmn:intermediateCatchEvent id="Event_0cd28mr" name="Order Confirmed with delivery details attached">
       <bpmn:incoming>Flow_08dert0</bpmn:incoming>
       <bpmn:outgoing>Flow_0oppf3g</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1yngz73" />
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1yngz73" messageRef="Message_OrderConfirmed" />
     </bpmn:intermediateCatchEvent>
     <bpmn:intermediateCatchEvent id="Event_0m8oj1n" name="Recieve payment failed">
       <bpmn:incoming>Flow_011cjaf</bpmn:incoming>
       <bpmn:outgoing>Flow_1g41pmk</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1j36lsg" />
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1j36lsg" messageRef="Message_PaymentFailed" />
     </bpmn:intermediateCatchEvent>
     <bpmn:intermediateThrowEvent id="Event_08xsc4m" name="product details sent">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-product-details" retries="3" />
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_1bhb3fz</bpmn:incoming>
       <bpmn:outgoing>Flow_12ixsh8</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0iupn1l" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:exclusiveGateway id="Gateway_0y2psc1" name="Customer retrys payment">
+    <bpmn:exclusiveGateway id="Gateway_0y2psc1" name="Customer retrys payment" default="Flow_0gjcfpm">
       <bpmn:incoming>Flow_1g41pmk</bpmn:incoming>
       <bpmn:outgoing>Flow_08bjd7x</bpmn:outgoing>
       <bpmn:outgoing>Flow_0gjcfpm</bpmn:outgoing>
@@ -71,6 +77,9 @@
       <bpmn:incoming>Flow_0ed5ckd</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:intermediateThrowEvent id="Event_0y5tdaz" name="Order cancelled">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-order-cancellation" retries="3" />
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_0gjcfpm</bpmn:incoming>
       <bpmn:outgoing>Flow_0ed5ckd</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1b7t4fs" />
@@ -86,7 +95,9 @@
     <bpmn:sequenceFlow id="Flow_08ovefc" sourceRef="Activity_1uijkqb" targetRef="Event_0edohqq" />
     <bpmn:sequenceFlow id="Flow_0uekopa" sourceRef="Event_0cd9acj" targetRef="Gateway_1nuibp6" />
     <bpmn:sequenceFlow id="Flow_12ixsh8" sourceRef="Event_08xsc4m" targetRef="Gateway_0sz92j6" />
-    <bpmn:sequenceFlow id="Flow_08bjd7x" name="Yes" sourceRef="Gateway_0y2psc1" targetRef="Gateway_0sz92j6" />
+    <bpmn:sequenceFlow id="Flow_08bjd7x" name="Yes" sourceRef="Gateway_0y2psc1" targetRef="Gateway_0sz92j6">
+      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">= retryPayment</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1bhb3fz" sourceRef="Activity_0dp2g17" targetRef="Event_08xsc4m" />
     <bpmn:sequenceFlow id="Flow_08dert0" sourceRef="Gateway_1nuibp6" targetRef="Event_0cd28mr" />
     <bpmn:sequenceFlow id="Flow_011cjaf" sourceRef="Gateway_1nuibp6" targetRef="Event_0m8oj1n" />
@@ -216,6 +227,16 @@
     <bpmn:sequenceFlow id="Flow_1vo4sje" sourceRef="Activity_0q7281k" targetRef="Event_10q8zsk" />
     <bpmn:sequenceFlow id="Flow_0mvi1bm" sourceRef="Activity_1gopn99" targetRef="Activity_0zkiqvn" />
   </bpmn:process>
+  <bpmn:message id="Message_OrderConfirmed" name="order-confirmed">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="= orderId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:message id="Message_PaymentFailed" name="payment-failed">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="= orderId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_065tdgq">
       <bpmndi:BPMNShape id="Participant_0j0s2mn_di" bpmnElement="Participant_0j0s2mn" isHorizontal="true">
@@ -464,10 +485,10 @@
         <dc:Bounds x="1140" y="660" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0w28d9g_di" bpmnElement="Event_07ly06o">
-        <dc:Bounds x="542" y="602" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_0q5qfry_di" bpmnElement="Event_0sa8tzz">
+        <dc:Bounds x="822" y="522" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="560" y="626" width="59" height="27" />
+          <dc:Bounds x="756" y="523" width="67" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_13dey6o_di" bpmnElement="Event_0bv4dxn">
@@ -476,10 +497,10 @@
           <dc:Bounds x="466" y="626" width="47" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0q5qfry_di" bpmnElement="Event_0sa8tzz">
-        <dc:Bounds x="822" y="522" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_0w28d9g_di" bpmnElement="Event_07ly06o">
+        <dc:Bounds x="542" y="602" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="756" y="523" width="67" height="14" />
+          <dc:Bounds x="560" y="626" width="59" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1doxva6_di" bpmnElement="Flow_1doxva6">
@@ -579,10 +600,6 @@
         <di:waypoint x="1100" y="700" />
         <di:waypoint x="1140" y="700" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Association_1231dbw_di" bpmnElement="Association_1231dbw">
-        <di:waypoint x="452" y="636" />
-        <di:waypoint x="385" y="690" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="TextAnnotation_0ag99dc_di" bpmnElement="TextAnnotation_0ag99dc">
         <dc:Bounds x="310" y="690" width="106" height="86" />
         <bpmndi:BPMNLabel />
@@ -619,6 +636,10 @@
         <di:waypoint x="600" y="430" />
         <di:waypoint x="600" y="620" />
         <di:waypoint x="578" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1231dbw_di" bpmnElement="Association_1231dbw">
+        <di:waypoint x="452" y="636" />
+        <di:waypoint x="385" y="690" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

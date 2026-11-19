@@ -1,0 +1,22 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "19abde7"
+  },
+  "schemaVersion": 18,
+  "id": "catalogue-no-results-form",
+  "components": [
+    {
+      "type": "text",
+      "id": "IntroNoResults",
+      "layout": {
+        "row": "Row_IntroNoResults",
+        "columns": null
+      },
+      "text": "# No results found\nNo matching catalogue products were found. Complete this task to return to the search form and try different keywords or a different category."
+    }
+  ],
+  "type": "default"
+}
