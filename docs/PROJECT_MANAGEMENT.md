@@ -37,6 +37,11 @@
 
 
 ## Sprint Listings
+### Sprint 2:
+From: 2026-10-29 - 2026-11-19.
+
+During this sprint, we focused on making the i* diagram, and adding the appropriate forms. Unfortunately, due to some restrictions from UWE, we cannot hook up a proper python automation, so our primary focus was ensuring that everything ran smoothly on the Camunda side of things. While there's some teething problems, the Browse & Search catalogue and Product Listing entry is operational.
+
 ### Sprint 1:
 
 From: 2026-10-22 to 2026-10-29.
